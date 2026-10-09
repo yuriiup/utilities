@@ -11,15 +11,17 @@ typedef struct {
   int ends;             // e
   int squeeze_blank;    // s
   int tabs;             // t
-  int special;         // v
+  int special;          // v
 } ShortOptions;
 
 FILE* read_files(int index, char* argv[]);
 
-void stream_output(FILE* fp);
+void stream_output(FILE* fp, const ShortOptions* options);
 int process_output(int argc, char* argv[], ShortOptions* options);
 
 int process_options(int argc, char* argv[], ShortOptions* options);
 int coice_options(int option, ShortOptions* options);
+
+void number_lines(const ShortOptions* options, char symbol, int* lines);
 
 #endif
