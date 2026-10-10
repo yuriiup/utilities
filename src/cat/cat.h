@@ -25,5 +25,8 @@ int coice_options(int option, ShortOptions* options);
 void number_lines(const ShortOptions* options, char symbol, int* lines);
 void number_nonblank_lines(const ShortOptions* options, char prev, char curr,
                            int* lines);
+void print_ends_lines(const ShortOptions* options, char curr);
+int squeeze_lines(const ShortOptions* options, char prev, char curr,
+                  int* elines);
 
 #endif

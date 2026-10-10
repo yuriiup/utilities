@@ -17,14 +17,27 @@ void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
   char curr;
   char prev = 0;
 
+  int elines;
+
   while ((lines = fgetc(fp)) != EOF) {
     curr = lines;
 
+    // вызов флага -s
+    if (options->squeeze_blank) {
+      if (squeeze_lines(options, prev, curr, &elines)) {
+        prev = curr;
+        continue;
+      }
+    }
+
+    // вызов флагов -b и -n
     if (options->number_nonblank) {
       number_nonblank_lines(options, prev, curr, count_string);
     } else {
       number_lines(options, prev, count_string);
     }
+
+    print_ends_lines(options, curr);
 
     printf("%c", curr);  // уточнить модификаторы
 
@@ -147,4 +160,26 @@ void number_nonblank_lines(const ShortOptions* options, char prev, char curr,
     printf("%6d  ", *lines);
     (*lines)++;
   }
+}
+
+void print_ends_lines(const ShortOptions* options, char curr) {
+  if (options->ends && curr == '\n') {
+    printf("%c", '$');
+  }
+}
+
+int squeeze_lines(const ShortOptions* options, char prev, char curr,
+                  int* elines) {
+  int pass = 0;
+  if (options->squeeze_blank && (prev == '\n' && curr == '\n')) {
+    (*elines)++;
+  } else {
+    *elines = 0;
+  }
+
+  if (*elines > 1) {
+    pass = 1;
+  }
+
+  return pass;
 }
