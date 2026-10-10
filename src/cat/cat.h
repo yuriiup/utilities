@@ -16,12 +16,14 @@ typedef struct {
 
 FILE* read_files(int index, char* argv[]);
 
-void stream_output(FILE* fp, const ShortOptions* options);
+void stream_output(FILE* fp, const ShortOptions* options, int* count_string);
 int process_output(int argc, char* argv[], ShortOptions* options);
 
 int process_options(int argc, char* argv[], ShortOptions* options);
 int coice_options(int option, ShortOptions* options);
 
 void number_lines(const ShortOptions* options, char symbol, int* lines);
+void number_nonblank_lines(const ShortOptions* options, char prev, char curr,
+                           int* lines);
 
 #endif
