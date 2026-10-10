@@ -4,14 +4,13 @@
 #include <getopt.h>
 #include <stdio.h>
 
-// shortopts
 typedef struct {
-  int number_nonblank;  // b
-  int number;           // n
-  int ends;             // e
-  int squeeze_blank;    // s
-  int tabs;             // t
-  int special;          // v
+  int number_nonblank;
+  int number;
+  int ends;
+  int squeeze_blank;
+  int tabs;
+  int special;
 } ShortOptions;
 
 FILE* read_files(int index, char* argv[]);
@@ -28,5 +27,6 @@ void number_nonblank_lines(const ShortOptions* options, char prev, char curr,
 void print_ends_lines(const ShortOptions* options, char curr);
 int squeeze_lines(const ShortOptions* options, char prev, char curr,
                   int* elines);
+int print_tabs(const ShortOptions* options, char curr);
 
 #endif

@@ -10,7 +10,6 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-// сам поток вывода
 void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
   char lines;
 
@@ -30,7 +29,6 @@ void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
       }
     }
 
-    // вызов флагов -b и -n
     if (options->number_nonblank) {
       number_nonblank_lines(options, prev, curr, count_string);
     } else {
@@ -38,18 +36,19 @@ void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
     }
 
     print_ends_lines(options, curr);
+    if (print_tabs(options, curr)) {
+      prev = curr;
+      continue;
+    }
 
-    printf("%c", curr);  // уточнить модификаторы
+    printf("%c", curr);
 
     prev = curr;
   }
   printf("\n");
 }
 
-// управление выводом из файла. вызов нужных функций
 int process_output(int argc, char* argv[], ShortOptions* options) {
-  // printf("%d", process_options(argc, argv, options));
-  // printf("%d", !process_options(argc, argv, options));
   int count_string = 1;
 
   if (process_options(argc, argv, options)) {
@@ -70,7 +69,6 @@ int process_output(int argc, char* argv[], ShortOptions* options) {
   return 0;
 }
 
-// функция возвращает указатель на файл чтения
 FILE* read_files(int index, char* argv[]) {
   FILE* fp = fopen(argv[index], "r");
   if (fp == NULL) {
@@ -116,16 +114,12 @@ int coice_options(int option, ShortOptions* options) {
   return 0;
 }
 
-// существует структура "состояний" коротких опций shortopts
-// существует структура, которая содержит параметры длинных опций longopts
 int process_options(int argc, char* argv[], ShortOptions* options) {
   const char* shortopts = "beEnstTv";
 
   int result;
   int temp;
 
-  // внутренняя структура option объявленна в getopt.h
-  // сигнатура name, arg, flag, val
   static struct option longopts[] = {
       {"number-nonblank", no_argument, NULL, 'b'},
       {"number", no_argument, NULL, 'n'},
@@ -134,7 +128,6 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
 
   while ((result = getopt_long(argc, argv, shortopts, longopts, &temp)) != -1) {
     if (coice_options(result, options)) {
-      // если не прошло по флагам
       return 1;
     }
   }
@@ -143,7 +136,6 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
     options->number = 0;
   }
 
-  // printf("%d", options->number);
   return 0;
 }
 
@@ -171,6 +163,7 @@ void print_ends_lines(const ShortOptions* options, char curr) {
 int squeeze_lines(const ShortOptions* options, char prev, char curr,
                   int* elines) {
   int pass = 0;
+
   if (options->squeeze_blank && (prev == '\n' && curr == '\n')) {
     (*elines)++;
   } else {
@@ -179,6 +172,16 @@ int squeeze_lines(const ShortOptions* options, char prev, char curr,
 
   if (*elines > 1) {
     pass = 1;
+  }
+
+  return pass;
+}
+
+int print_tabs(const ShortOptions* options, char curr) {
+  int pass = 0;
+  if (options->tabs && curr == '\t') {
+    pass = 1;
+    printf("%s", "^I");
   }
 
   return pass;
