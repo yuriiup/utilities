@@ -4,6 +4,9 @@
 #include <getopt.h>
 #include <stdio.h>
 
+#define CONTROL_CHAR 31
+#define EXTENDED_CHAR 128
+
 typedef struct {
   int number_nonblank;
   int number;
@@ -28,5 +31,6 @@ void print_ends_lines(const ShortOptions* options, char curr);
 int squeeze_lines(const ShortOptions* options, char prev, char curr,
                   int* elines);
 int print_tabs(const ShortOptions* options, char curr);
+int print_special(const ShortOptions* options, int curr);
 
 #endif

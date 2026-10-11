@@ -11,17 +11,12 @@ int main(int argc, char* argv[]) {
 }
 
 void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
-  char lines;
-
   char curr;
   char prev = 0;
 
   int elines;
 
-  while ((lines = fgetc(fp)) != EOF) {
-    curr = lines;
-
-    // вызов флага -s
+  while ((curr = fgetc(fp)) != EOF) {
     if (options->squeeze_blank) {
       if (squeeze_lines(options, prev, curr, &elines)) {
         prev = curr;
@@ -35,17 +30,22 @@ void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
       number_lines(options, prev, count_string);
     }
 
-    print_ends_lines(options, curr);
-    if (print_tabs(options, curr)) {
-      prev = curr;
-      continue;
+    if (options->special) {
+      if (print_special(options, curr)) {
+        prev = curr;
+        continue;
+      }
+    } else {
+      print_ends_lines(options, curr);
+      if (print_tabs(options, curr)) {
+        prev = curr;
+        continue;
+      }
     }
 
     printf("%c", curr);
-
     prev = curr;
   }
-  printf("\n");
 }
 
 int process_output(int argc, char* argv[], ShortOptions* options) {
@@ -87,21 +87,21 @@ int coice_options(int option, ShortOptions* options) {
     case 'n':
       options->number = 1;
       break;
-    case 'e':
-      options->ends = 1;
-      options->special = 1;
-      break;
     case 'E':
+      options->ends = 1;
+      break;
+    case 'e':
+      options->special = 1;
       options->ends = 1;
       break;
     case 's':
       options->squeeze_blank = 1;
       break;
-    case 't':
-      options->tabs = 1;
-      options->special = 1;
-      break;
     case 'T':
+      options->tabs = 1;
+      break;
+    case 't':
+      options->special = 1;
       options->tabs = 1;
       break;
     case 'v':
@@ -124,7 +124,7 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
       {"number-nonblank", no_argument, NULL, 'b'},
       {"number", no_argument, NULL, 'n'},
       {"squeeze_blank", no_argument, NULL, 's'},
-      {0, 0, 0, 0}};
+      {NULL, 0, NULL, 0}};
 
   while ((result = getopt_long(argc, argv, shortopts, longopts, &temp)) != -1) {
     if (coice_options(result, options)) {
@@ -180,8 +180,31 @@ int squeeze_lines(const ShortOptions* options, char prev, char curr,
 int print_tabs(const ShortOptions* options, char curr) {
   int pass = 0;
   if (options->tabs && curr == '\t') {
-    pass = 1;
     printf("%s", "^I");
+    pass = 1;
+  }
+
+  return pass;
+}
+
+int print_special(const ShortOptions* options, int curr) {
+  int pass = 0;
+  if (options->special) {
+    if (curr >= 0 && curr <= CONTROL_CHAR && curr != '\n' && curr != '\t') {
+      printf("%s", "^M");
+      pass = 1;
+    } else if (curr >= EXTENDED_CHAR && curr <= 255) {
+      printf("%s", "-M");
+      pass = 1;
+    }
+
+    if (options->tabs && curr == '\t') {
+      pass = print_tabs(options, curr);
+    }
+
+    if (options->ends && curr == '\n') {
+      print_ends_lines(options, curr);
+    }
   }
 
   return pass;
