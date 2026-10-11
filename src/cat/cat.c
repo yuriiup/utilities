@@ -11,10 +11,10 @@ int main(int argc, char* argv[]) {
 }
 
 void stream_output(FILE* fp, const ShortOptions* options, int* count_string) {
-  char curr;
+  int curr;
   char prev = 0;
 
-  int elines;
+  int elines = 0;
 
   while ((curr = fgetc(fp)) != EOF) {
     if (options->squeeze_blank) {
@@ -79,7 +79,7 @@ FILE* read_files(int index, char* argv[]) {
   return fp;
 }
 
-int coice_options(int option, ShortOptions* options) {
+int choice_options(int option, ShortOptions* options) {
   switch (option) {
     case 'b':
       options->number_nonblank = 1;
@@ -117,8 +117,8 @@ int coice_options(int option, ShortOptions* options) {
 int process_options(int argc, char* argv[], ShortOptions* options) {
   const char* shortopts = "beEnstTv";
 
-  int result;
-  int temp;
+  int result = 0;
+  int temp = 0;
 
   static struct option longopts[] = {
       {"number-nonblank", no_argument, NULL, 'b'},
@@ -127,7 +127,7 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
       {NULL, 0, NULL, 0}};
 
   while ((result = getopt_long(argc, argv, shortopts, longopts, &temp)) != -1) {
-    if (coice_options(result, options)) {
+    if (choice_options(result, options)) {
       return 1;
     }
   }
