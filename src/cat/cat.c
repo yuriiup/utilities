@@ -55,6 +55,12 @@ int process_output(int argc, char* argv[], ShortOptions* options) {
     return 1;
   }
 
+  if (argc == 1) {
+    FILE* fp = stdin;
+    stream_output(fp, options, &count_string);
+  }
+
+
   for (int i = optind; i < argc; ++i) {
     FILE* fp = read_files(i, argv);
 
@@ -72,7 +78,7 @@ int process_output(int argc, char* argv[], ShortOptions* options) {
 FILE* read_files(int index, char* argv[]) {
   FILE* fp = fopen(argv[index], "r");
   if (fp == NULL) {
-    perror("Empty file");
+    perror("Error occured while opening file");
     return NULL;
   }
 
@@ -107,6 +113,11 @@ int choice_options(int option, ShortOptions* options) {
     case 'v':
       options->special = 1;
       break;
+    case 'A':
+      options->special = 1;
+      options->tabs = 1;
+      options->ends = 1;
+      break;
     case '?':
       return 1;
   }
@@ -115,7 +126,7 @@ int choice_options(int option, ShortOptions* options) {
 }
 
 int process_options(int argc, char* argv[], ShortOptions* options) {
-  const char* shortopts = "beEnstTv";
+  const char* shortopts = "beEnstTvA";
 
   int result = 0;
   int temp = 0;
@@ -123,7 +134,8 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
   static struct option longopts[] = {
       {"number-nonblank", no_argument, NULL, 'b'},
       {"number", no_argument, NULL, 'n'},
-      {"squeeze_blank", no_argument, NULL, 's'},
+      {"squeeze-blank", no_argument, NULL, 's'},
+      {"show-all", no_argument, NULL, 'A'},
       {NULL, 0, NULL, 0}};
 
   while ((result = getopt_long(argc, argv, shortopts, longopts, &temp)) != -1) {
