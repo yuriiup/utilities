@@ -60,7 +60,6 @@ int process_output(int argc, char* argv[], ShortOptions* options) {
     stream_output(fp, options, &count_string);
   }
 
-
   for (int i = optind; i < argc; ++i) {
     FILE* fp = read_files(i, argv);
 
