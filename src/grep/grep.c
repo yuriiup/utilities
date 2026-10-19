@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-FILE* read_files(int index, char* argv[]) {
+FILE* open_files(int index, char* argv[]) {
   FILE* fp = fopen(argv[index], "r");
 
   if (fp == NULL) {
@@ -19,26 +19,39 @@ FILE* read_files(int index, char* argv[]) {
   return fp;
 }
 
-void stream_output(FILE* fp) {
-  int curr;
-  while ((curr = fgetc(fp)) != EOF) {
-    printf("%c", curr);
+void read_string(FILE* fp, char* argv[]) {
+  // чтение строк из файла
+  ssize_t read;
+  char* string = NULL;
+  size_t length = 0;
+
+  // использование getline для получения строк и передча в regex
+  while ((read = getline(&string, &length, fp)) != -1) {
+    if (finding_match(string, argv[2])) {
+      stream_output(string);  // вывод
+    }
   }
+
+  free(string);
 }
 
+void stream_output(char* string) { printf("%s", string); }
+
 int process_output(int argc, char* argv[], ShortOptions* options) {
+  // управление вводом
   if (process_options(argc, argv, options)) {
     return 1;
   }
 
+  // получение указателя на файл
   for (int i = optind; i < argc; ++i) {
-    FILE* fp = read_files(i, argv);
+    FILE* fp = open_files(i, argv);
 
     if (fp == NULL) {
       return 1;
     }
 
-    stream_output(fp);
+    read_string(fp, argv);
     fclose(fp);
   }
 
@@ -85,6 +98,7 @@ int choice_options(int option, ShortOptions* options) {
 }
 
 int process_options(int argc, char* argv[], ShortOptions* options) {
+  // принятие флагов
   const char* shortopts = "e:ivclnhsf:o";
 
   int result = 0;
@@ -99,10 +113,36 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
       {"line-number", no_argument, NULL, 'n'}};
 
   while ((result = getopt_long(argc, argv, shortopts, longopts, &temp)) != -1) {
-    if (choice_options(result, options)) {
+    if (choice_options(result, options)) {  // активация выбранных флагов
       return 1;
     }
   }
 
   return 0;
+}
+
+int finding_match(char* string, const char* pattern) {
+  regex_t re;
+  regmatch_t pmatch[1];
+  int cflags = REG_EXTENDED;
+
+  if (regcomp(&re, pattern, cflags)) {
+    perror("regex compile failed");
+  }
+
+  // результат поиска
+  int result = regexec(&re, string, 1, pmatch, 0);
+
+  // обработка результата
+  if (!result) {
+    result = 1;
+  } else if (result == REG_NOMATCH) {
+    result = 0;
+  } else {
+    perror("regexec failed");
+    result = 0;
+  }
+
+  regfree(&re);
+  return result;
 }

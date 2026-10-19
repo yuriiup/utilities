@@ -1,9 +1,13 @@
 #ifndef GREP_H
 #define GREP_H
 
+#define _GNU_SOURCE
+#define BUFFER 4096
+
 #include <getopt.h>
 #include <regex.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct {
   int pattern;
@@ -18,12 +22,15 @@ typedef struct {
   int matching_part;
 } ShortOptions;
 
-FILE* read_files(int index, char* argv[]);
+FILE* open_files(int index, char* argv[]);
+void read_string(FILE* fp, char* argv[]);
 
-void stream_output(FILE* fp);
+void stream_output(char* string);
 int process_output(int argc, char* argv[], ShortOptions* options);
 
 int process_options(int argc, char* argv[], ShortOptions* options);
 int choice_options(int option, ShortOptions* options);
+
+int finding_match(char* string, const char* pattern);
 
 #endif
