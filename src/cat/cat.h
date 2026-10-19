@@ -16,7 +16,7 @@ typedef struct {
   int special;
 } ShortOptions;
 
-FILE* read_files(int index, char* argv[]);
+FILE* open_files(int index, char* argv[]);
 
 void stream_output(FILE* fp, const ShortOptions* options, int* count_string);
 int process_output(int argc, char* argv[], ShortOptions* options);

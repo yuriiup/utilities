@@ -61,10 +61,10 @@ int process_output(int argc, char* argv[], ShortOptions* options) {
   }
 
   for (int i = optind; i < argc; ++i) {
-    FILE* fp = read_files(i, argv);
+    FILE* fp = open_files(i, argv);
 
     if (fp == NULL) {
-      return 1;
+      continue;
     }
 
     stream_output(fp, options, &count_string);
@@ -74,7 +74,7 @@ int process_output(int argc, char* argv[], ShortOptions* options) {
   return 0;
 }
 
-FILE* read_files(int index, char* argv[]) {
+FILE* open_files(int index, char* argv[]) {
   FILE* fp = fopen(argv[index], "r");
   if (fp == NULL) {
     perror("Error occured while opening file");
