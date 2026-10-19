@@ -2,8 +2,9 @@
 
 int main(int argc, char* argv[]) {
   ShortOptions options = {0};
+  Patterns patterns = {0};
 
-  process_output(argc, argv, &options);
+  process_output(argc, argv, &options, &patterns);
 
   return 0;
 }
@@ -11,7 +12,9 @@ int main(int argc, char* argv[]) {
 FILE* open_files(int index, char* argv[]) {
   FILE* fp = fopen(argv[index], "r");
 
+  // если файла не существует
   if (fp == NULL) {
+    printf("%s ", argv[index]);
     perror("Error occured while opening file");
     return NULL;
   }
@@ -19,49 +22,61 @@ FILE* open_files(int index, char* argv[]) {
   return fp;
 }
 
-void read_string(FILE* fp, char* argv[]) {
+int read_string(FILE* fp, const char* pattern) {
   // чтение строк из файла
   ssize_t read;
   char* string = NULL;
   size_t length = 0;
 
+  if (pattern == NULL) {
+    return 1;
+  }
+
   // использование getline для получения строк и передча в regex
   while ((read = getline(&string, &length, fp)) != -1) {
-    if (finding_match(string, argv[2])) {
+    if (search_match(string, pattern)) {
       stream_output(string);  // вывод
     }
   }
 
   free(string);
+  return 0;
 }
 
 void stream_output(char* string) { printf("%s", string); }
 
-int process_output(int argc, char* argv[], ShortOptions* options) {
-  // управление вводом
-  if (process_options(argc, argv, options)) {
+int process_output(int argc, char* argv[], ShortOptions* options, Patterns* patterns) {
+  char* pattern = NULL;
+  if (process_options(argc, argv, options, patterns)) {
     return 1;
   }
 
+  pattern = process_pattern(argv, options, patterns);
+  
   // получение указателя на файл
   for (int i = optind; i < argc; ++i) {
     FILE* fp = open_files(i, argv);
 
     if (fp == NULL) {
+      continue;
+    }
+    
+    printf("%s", pattern);
+    if (read_string(fp, pattern)) {
       return 1;
     }
 
-    read_string(fp, argv);
     fclose(fp);
   }
 
   return 0;
 }
 
-int choice_options(int option, ShortOptions* options) {
+int choice_options(int option, ShortOptions* options, Patterns* patterns) {
   switch (option) {
     case 'e':
       options->pattern = 1;
+      patterns->template = optarg;
       break;
     case 'i':
       options->ignore_case = 1;
@@ -97,7 +112,7 @@ int choice_options(int option, ShortOptions* options) {
   return 0;
 }
 
-int process_options(int argc, char* argv[], ShortOptions* options) {
+int process_options(int argc, char* argv[], ShortOptions* options, Patterns* patterns) {
   // принятие флагов
   const char* shortopts = "e:ivclnhsf:o";
 
@@ -113,7 +128,7 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
       {"line-number", no_argument, NULL, 'n'}};
 
   while ((result = getopt_long(argc, argv, shortopts, longopts, &temp)) != -1) {
-    if (choice_options(result, options)) {  // активация выбранных флагов
+    if (choice_options(result, options, patterns)) {  // активация выбранных флагов
       return 1;
     }
   }
@@ -121,17 +136,19 @@ int process_options(int argc, char* argv[], ShortOptions* options) {
   return 0;
 }
 
-int finding_match(char* string, const char* pattern) {
+int search_match(char* string, const char* pattern) {
   regex_t re;
   regmatch_t pmatch[1];
+  int result = 0;
   int cflags = REG_EXTENDED;
 
   if (regcomp(&re, pattern, cflags)) {
     perror("regex compile failed");
+    return result;
   }
 
   // результат поиска
-  int result = regexec(&re, string, 1, pmatch, 0);
+  result = regexec(&re, string, 1, pmatch, 0);
 
   // обработка результата
   if (!result) {
@@ -145,4 +162,19 @@ int finding_match(char* string, const char* pattern) {
 
   regfree(&re);
   return result;
+}
+
+
+char* process_pattern(char* argv[], ShortOptions* options, Patterns* patterns) {
+  char* pattern = NULL;
+
+  if (options->pattern) {
+    pattern = patterns->template;
+    printf("%s", optarg);
+  } else {
+    pattern = argv[optind];
+    optind++;
+  }
+
+  return pattern;
 }
