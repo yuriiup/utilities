@@ -1,0 +1,36 @@
+#ifndef CAT_H
+#define CAT_H
+
+#include <getopt.h>
+#include <stdio.h>
+
+#define CONTROL_CHAR 31
+#define EXTENDED_CHAR 128
+
+typedef struct {
+  int number_nonblank;
+  int number;
+  int ends;
+  int squeeze_blank;
+  int tabs;
+  int special;
+} ShortOptions;
+
+FILE* open_files(int index, char* argv[]);
+
+void stream_output(FILE* fp, const ShortOptions* options, int* count_string);
+int process_output(int argc, char* argv[], ShortOptions* options);
+
+int process_options(int argc, char* argv[], ShortOptions* options);
+int choice_options(int option, ShortOptions* options);
+
+void number_lines(const ShortOptions* options, char symbol, int* lines);
+void number_nonblank_lines(const ShortOptions* options, char prev, char curr,
+                           int* lines);
+void print_ends_lines(const ShortOptions* options, char curr);
+int squeeze_lines(const ShortOptions* options, char prev, char curr,
+                  int* elines);
+int print_tabs(const ShortOptions* options, char curr);
+int print_special(const ShortOptions* options, int curr);
+
+#endif
